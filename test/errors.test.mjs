@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import test from "node:test";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { CoolifyClient } from "../dist/coolify.js";
 import { PublicError, toolErrorMessage } from "../dist/errors.js";
 
@@ -21,6 +23,24 @@ test("unexpected errors suppress credentials, encoded values, and response detai
 
 test("deliberate public guidance remains useful", () => {
   assert.equal(toolErrorMessage(new PublicError("Coolify HTTP 403.")), "Coolify HTTP 403.");
+});
+
+test("remote HTTP is rejected unless deliberately enabled", () => {
+  assert.throws(
+    () => new CoolifyClient({ url: "http://coolify.example.com", token: "mock-token" }),
+    /require HTTPS/,
+  );
+  assert.doesNotThrow(
+    () =>
+      new CoolifyClient({
+        url: "http://coolify.example.com",
+        token: "mock-token",
+        allowInsecureHttp: true,
+      }),
+  );
+  for (const url of ["http://localhost:8000", "http://127.0.0.1:8000", "http://[::1]:8000"]) {
+    assert.doesNotThrow(() => new CoolifyClient({ url, token: "mock-token" }));
+  }
 });
 
 test("HTTP redirects never forward the Coolify credential to another endpoint", async () => {
@@ -48,4 +68,24 @@ test("HTTP redirects never forward the Coolify credential to another endpoint", 
       new Promise((resolve) => target.close(resolve)),
     ]);
   }
+});
+
+test("startup explains insecure transport rejection without printing credentials", () => {
+  const result = spawnSync(
+    process.execPath,
+    [fileURLToPath(new URL("../dist/index.js", import.meta.url))],
+    {
+      env: {
+        ...process.env,
+        COOLIFY_URL: "http://coolify.example.com",
+        COOLIFY_TOKEN: "mock-private-credential",
+        COOLIFY_ALLOW_INSECURE_HTTP: "false",
+      },
+      encoding: "utf8",
+    },
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /require HTTPS/);
+  assert.equal(result.stderr.includes("mock-private-credential"), false);
+  assert.equal(result.stdout, "");
 });

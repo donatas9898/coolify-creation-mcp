@@ -143,6 +143,11 @@ test("context returns only this project's application summaries", async () => {
     ],
   });
   const context = await client.context({ project_uuid: input.project_uuid });
+  assert.deepEqual(context.inventory_scope, {
+    servers: "team",
+    destinations: "team",
+    applications: "project",
+  });
   assert.deepEqual(
     context.applications.map((item) => item.uuid),
     ["ours"],

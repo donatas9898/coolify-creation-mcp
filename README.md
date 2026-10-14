@@ -8,7 +8,7 @@ Use it with any Coolify instance and team-owned project.
 
 | Tool | Behavior |
 | --- | --- |
-| `get_creation_context` | Lists project environments, servers, destinations, and selected application settings. |
+| `get_creation_context` | Lists project environments/applications and available team-wide servers/destinations. |
 | `plan_docker_image_application` / `create_docker_image_application` | Prebuilt container image. |
 | `plan_public_repository_application` / `create_public_repository_application` | Public Git repository. |
 | `plan_github_app_application` / `create_github_app_application` | Private Git repository using an existing GitHub App. |
@@ -40,6 +40,10 @@ Set `COOLIFY_URL` to your instance origin, for example `https://coolify.example.
 `/api/v1` is also accepted. Supply `COOLIFY_TOKEN` through your MCP host's secret
 configuration or inherited environment. It is never a tool argument or returned
 in tool output. The server does not automatically load `.env` files.
+
+HTTPS is required for remote instances. Loopback HTTP (`localhost`, `127.0.0.1`,
+or `[::1]`) is allowed for development. To deliberately use remote HTTP, set
+`COOLIFY_ALLOW_INSECURE_HTTP=true`; this sends credentials without encryption.
 
 Configure your MCP host to run `node /absolute/path/to/coolify-creation-mcp/dist/index.js`
 over stdio. A typical host configuration is:
@@ -158,9 +162,13 @@ API requests go only to the configured `COOLIFY_URL`. The server has no telemetr
 analytics endpoint, or application log file. Redirects are rejected, and credentials
 are supplied through the process environment rather than tool arguments.
 
-Use HTTPS for remote Coolify instances: HTTP sends the Bearer token and request
-body without transport encryption. HTTP remains supported for local development
-and explicitly configured private-network deployments.
+Remote HTTP is blocked by default. HTTP sends the Bearer token and request body
+without transport encryption; only enable it deliberately on a trusted network.
+
+`get_creation_context` returns servers and destinations available across the
+authenticated team so new projects can choose their infrastructure. Environments
+and applications are scoped to the selected project. The result's `inventory_scope`
+labels these boundaries. It does not provide isolation between projects in one team.
 
 Tool inputs and results are visible to your MCP host and may enter its conversation
 or logs according to that host's settings. Preview tools return the creation body,
@@ -193,6 +201,19 @@ Use `npm run format` to apply formatting. `npm test` builds the server first,
 then runs the existing Node.js tests against the compiled JavaScript.
 Tests use mocked Coolify responses and a real stdio MCP client/server handshake.
 They never create production resources. CI runs them on Linux and Windows.
+
+The tests cover all creation routes using mocked API responses. Docker Image
+creation has also been exercised against a live Coolify instance; the other
+creation variants have not yet been verified end to end against a live instance.
+Treat this as an early release and check your installed Coolify version's API
+support before production use.
+
+## License and security
+
+[MIT](LICENSE). See [SECURITY.md](SECURITY.md) for reporting and deployment guidance.
+The GitHub source repository can be public; `private: true` in `package.json`
+deliberately prevents accidental npm publication. Install from source using the
+instructions above; this package is not currently published to npm.
 
 Built with the official [MCP SDK](https://github.com/modelcontextprotocol/typescript-sdk).
 Creation uses the documented [Coolify application endpoints](https://raw.githubusercontent.com/coollabsio/coolify/main/openapi.yaml):

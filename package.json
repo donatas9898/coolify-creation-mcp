@@ -3,6 +3,18 @@
   "version": "0.1.0",
   "description": "MCP tools for creating Coolify applications from container images, Git repositories, Dockerfiles, and Docker Compose.",
   "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/donatas9898/coolify-creation-mcp.git"
+  },
+  "files": [
+    "dist",
+    "examples",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "engines": {

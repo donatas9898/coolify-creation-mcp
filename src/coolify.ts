@@ -21,6 +21,7 @@ export interface CoolifyClientOptions {
   url: string | undefined;
   token: string | undefined;
   fetchImpl?: typeof fetch;
+  allowInsecureHttp?: boolean;
 }
 
 export class CoolifyClient {
@@ -29,7 +30,7 @@ export class CoolifyClient {
   readonly token: string;
   private readonly fetchImpl: typeof fetch;
 
-  constructor({ url, token, fetchImpl = fetch }: CoolifyClientOptions) {
+  constructor({ url, token, fetchImpl = fetch, allowInsecureHttp = false }: CoolifyClientOptions) {
     if (!url || !token || /[\r\n]/.test(token)) {
       throw new PublicError(
         "Configure COOLIFY_URL and COOLIFY_TOKEN in the MCP process environment.",
@@ -46,6 +47,12 @@ export class CoolifyClient {
     ) {
       throw new PublicError(
         "COOLIFY_URL must be an instance origin, optionally ending in /api/v1.",
+      );
+    }
+    const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(parsed.hostname);
+    if (parsed.protocol === "http:" && !loopback && !allowInsecureHttp) {
+      throw new PublicError(
+        "Remote Coolify instances require HTTPS. Only enable COOLIFY_ALLOW_INSECURE_HTTP=true for a deliberately trusted HTTP deployment.",
       );
     }
     this.origin = parsed.origin;
@@ -127,6 +134,7 @@ export class CoolifyClient {
       ),
     ]);
     return {
+      inventory_scope: { servers: "team", destinations: "team", applications: "project" },
       project: {
         uuid: project.uuid,
         name: project.name,

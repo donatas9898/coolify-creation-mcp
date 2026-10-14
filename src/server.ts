@@ -39,7 +39,7 @@ export function createServer(client: CoolifyClient) {
   };
   register(
     "get_creation_context",
-    "Inspect a team-owned project's environments, servers, destinations, and application image settings. Returns selected fields without secrets.",
+    "Inspect a project's environments and applications, plus available servers and destinations across the authenticated team. inventory_scope labels those boundaries. Returns selected fields without credentials.",
     projectSchema,
     true,
     (input) => client.context(input),
