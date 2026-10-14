@@ -4,15 +4,27 @@
   "description": "MCP tools for creating Coolify applications from container images, Git repositories, Dockerfiles, and Docker Compose.",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "start": "node src/index.mjs",
-    "test": "node --test",
-    "check": "node --check src/index.mjs && node --check src/coolify.mjs"
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "typecheck": "tsc --noEmit",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "npm run typecheck && npm run format:check"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.3.1",
     "zod": "^4.0.0"
   },
-  "devDependencies": { "@modelcontextprotocol/client": "2.3.1" }
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.3.1",
+    "@types/node": "^22.0.0",
+    "@biomejs/biome": "2.5.6",
+    "typescript": "^6.0.3"
+  }
 }

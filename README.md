@@ -33,6 +33,7 @@ Requires Node.js 22 or newer.
 git clone https://github.com/donatas9898/coolify-creation-mcp.git
 cd coolify-creation-mcp
 npm ci
+npm run build
 ```
 
 Set `COOLIFY_URL` to your instance origin, for example `https://coolify.example.com`.
@@ -40,7 +41,7 @@ Set `COOLIFY_URL` to your instance origin, for example `https://coolify.example.
 configuration or inherited environment. It is never a tool argument or returned
 in tool output. The server does not automatically load `.env` files.
 
-Configure your MCP host to run `node /absolute/path/to/coolify-creation-mcp/src/index.mjs`
+Configure your MCP host to run `node /absolute/path/to/coolify-creation-mcp/dist/index.js`
 over stdio. A typical host configuration is:
 
 ```json
@@ -48,7 +49,7 @@ over stdio. A typical host configuration is:
   "mcpServers": {
     "coolify-creation": {
       "command": "node",
-      "args": ["/absolute/path/to/coolify-creation-mcp/src/index.mjs"],
+      "args": ["/absolute/path/to/coolify-creation-mcp/dist/index.js"],
       "env": {
         "COOLIFY_URL": "https://coolify.example.com",
         "COOLIFY_TOKEN": "<configure privately in your MCP host>"
@@ -58,7 +59,7 @@ over stdio. A typical host configuration is:
 }
 ```
 
-On Windows use `C:/path/to/coolify-creation-mcp/src/index.mjs`. This is a local
+On Windows use `C:/path/to/coolify-creation-mcp/dist/index.js`. This is a local
 stdio server; there is no public HTTP endpoint, Docker service, or hosted connector.
 
 ## Token permissions
@@ -153,11 +154,25 @@ fields; full environment values, tokens, and configuration snapshots are not ret
 
 ## Development
 
+Source code uses strict TypeScript and compiles to Node.js ES modules in `dist/`.
+
+| Module | Purpose |
+| --- | --- |
+| `src/schemas.ts` | Tool input schemas and inferred configuration types. |
+| `src/api-types.ts` | Runtime validation and types for Coolify API responses. |
+| `src/coolify.ts` | API client, creation validation, and webhook generation. |
+| `src/server.ts` | MCP tool registration. |
+| `src/index.ts` | Stdio entry point. |
+
 ```sh
 npm run check
+npm run build
 npm test
 ```
 
+`npm run check` runs TypeScript type checking and Biome formatting checks.
+Use `npm run format` to apply formatting. `npm test` builds the server first,
+then runs the existing Node.js tests against the compiled JavaScript.
 Tests use mocked Coolify responses and a real stdio MCP client/server handshake.
 They never create production resources. CI runs them on Linux and Windows.
 
