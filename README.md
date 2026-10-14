@@ -152,6 +152,23 @@ The API enforces team access. The MCP also checks the selected environment belon
 to the project and the destination belongs to the server. Tool outputs use selected
 fields; full environment values, tokens, and configuration snapshots are not returned.
 
+## Data handling
+
+API requests go only to the configured `COOLIFY_URL`. The server has no telemetry,
+analytics endpoint, or application log file. Redirects are rejected, and credentials
+are supplied through the process environment rather than tool arguments.
+
+Use HTTPS for remote Coolify instances: HTTP sends the Bearer token and request
+body without transport encryption. HTTP remains supported for local development
+and explicitly configured private-network deployments.
+
+Tool inputs and results are visible to your MCP host and may enter its conversation
+or logs according to that host's settings. Preview tools return the creation body,
+including commands and base64-encoded Dockerfiles. Do not embed secrets in those
+fields; use Coolify's environment/secret facilities. Inventory tools intentionally
+return names, identifiers, image names, and domains. Unexpected exceptions return
+a generic message; only deliberate non-sensitive guidance is exposed.
+
 ## Development
 
 Source code uses strict TypeScript and compiles to Node.js ES modules in `dist/`.
@@ -160,6 +177,7 @@ Source code uses strict TypeScript and compiles to Node.js ES modules in `dist/`
 | --- | --- |
 | `src/schemas.ts` | Tool input schemas and inferred configuration types. |
 | `src/api-types.ts` | Runtime validation and types for Coolify API responses. |
+| `src/errors.ts` | Public guidance and suppression of unexpected exception details. |
 | `src/coolify.ts` | API client, creation validation, and webhook generation. |
 | `src/server.ts` | MCP tool registration. |
 | `src/index.ts` | Stdio entry point. |

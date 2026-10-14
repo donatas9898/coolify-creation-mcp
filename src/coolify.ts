@@ -6,6 +6,7 @@ import type {
   WebhookInput,
 } from "./schemas.js";
 import { z } from "zod";
+import { PublicError } from "./errors.js";
 import {
   applicationResponseSchema,
   creationResponseSchema,
@@ -30,7 +31,9 @@ export class CoolifyClient {
 
   constructor({ url, token, fetchImpl = fetch }: CoolifyClientOptions) {
     if (!url || !token || /[\r\n]/.test(token)) {
-      throw new Error("Configure COOLIFY_URL and COOLIFY_TOKEN in the MCP process environment.");
+      throw new PublicError(
+        "Configure COOLIFY_URL and COOLIFY_TOKEN in the MCP process environment.",
+      );
     }
     const parsed = new URL(url);
     if (
@@ -41,7 +44,9 @@ export class CoolifyClient {
       parsed.hash ||
       !["/", "/api/v1", "/api/v1/"].includes(parsed.pathname)
     ) {
-      throw new Error("COOLIFY_URL must be an instance origin, optionally ending in /api/v1.");
+      throw new PublicError(
+        "COOLIFY_URL must be an instance origin, optionally ending in /api/v1.",
+      );
     }
     this.origin = parsed.origin;
     this.api = `${parsed.origin}/api/v1`;
@@ -64,7 +69,7 @@ export class CoolifyClient {
         redirect: "error",
       });
     } catch {
-      throw new Error(
+      throw new PublicError(
         method === "POST"
           ? "Creation response could not be confirmed. Check existing applications before retrying; the request may have succeeded."
           : "Coolify could not be reached. Check the instance URL and network access.",
@@ -79,7 +84,7 @@ export class CoolifyClient {
         422: "Coolify rejected the configuration. Check the project, environment, destination, image, ports, and domains.",
         429: "Coolify rate limit reached. Check inventory before retrying creation.",
       };
-      throw new Error(
+      throw new PublicError(
         `Coolify HTTP ${response.status}. ${
           hints[response.status] || "Request failed. Check inventory before retrying creation."
         }`,
@@ -88,7 +93,7 @@ export class CoolifyClient {
     try {
       return await response.json();
     } catch {
-      throw new Error(
+      throw new PublicError(
         method === "POST"
           ? "Creation may have succeeded, but the response was invalid. Check inventory before retrying."
           : "Coolify returned an invalid JSON response.",
@@ -159,18 +164,20 @@ export class CoolifyClient {
 
   async plan(input: unknown, type: ApplicationType = "docker_image") {
     const definition = applicationTypes[type];
-    if (!definition) throw new Error("Unsupported application type.");
+    if (!definition) throw new PublicError("Unsupported application type.");
     const config: ParsedApplicationConfig = definition.schema.parse(input);
     if (config.build_pack === "dockercompose" && config.domains.length > 0) {
-      throw new Error(
+      throw new PublicError(
         "Docker Compose uses docker_compose_domains per service, not application domains.",
       );
     }
     if (config.build_pack !== "dockercompose" && config.docker_compose_domains) {
-      throw new Error("docker_compose_domains requires the dockercompose build pack.");
+      throw new PublicError("docker_compose_domains requires the dockercompose build pack.");
     }
     if (type === "public_repository" && !/^https?:\/\//.test(config.git_repository || "")) {
-      throw new Error("Public repositories require an HTTP(S) URL; use a deploy key for SSH.");
+      throw new PublicError(
+        "Public repositories require an HTTP(S) URL; use a deploy key for SSH.",
+      );
     }
     const [project, server, applications] = await Promise.all([
       this.request("GET", `/projects/${config.project_uuid}`).then((data) =>
@@ -184,8 +191,8 @@ export class CoolifyClient {
       ),
     ]);
     const environment = project.environments?.find((item) => item.uuid === config.environment_uuid);
-    if (!environment) throw new Error("Environment does not belong to the selected project.");
-    if (server.uuid !== config.server_uuid) throw new Error("Server could not be verified.");
+    if (!environment) throw new PublicError("Environment does not belong to the selected project.");
+    if (server.uuid !== config.server_uuid) throw new PublicError("Server could not be verified.");
     if (config.destination_uuid) {
       const destination = parseResponse(
         destinationResponseSchema,
@@ -196,7 +203,7 @@ export class CoolifyClient {
         destination.server_uuid !== server.uuid &&
         !(server.id !== undefined && destination.server_id === server.id)
       ) {
-        throw new Error("Destination does not belong to the selected server.");
+        throw new PublicError("Destination does not belong to the selected server.");
       }
     }
     const existing = applications.find(
@@ -206,7 +213,7 @@ export class CoolifyClient {
           (environment.id !== undefined && item.environment_id === environment.id)),
     );
     if (existing)
-      throw new Error(
+      throw new PublicError(
         `An application named ${config.name} already exists in this environment (${uuid.parse(existing.uuid)}). Inspect it before creating another.`,
       );
     return {
@@ -247,7 +254,7 @@ export class CoolifyClient {
     );
     const parsedResult = creationResponseSchema.safeParse(result);
     if (!parsedResult.success) {
-      throw new Error(
+      throw new PublicError(
         "Creation may have succeeded, but no valid UUID was returned. Check inventory before retrying.",
       );
     }
@@ -285,7 +292,8 @@ export class CoolifyClient {
       await this.request("GET", `/applications/${applicationUuid}`),
       "application",
     );
-    if (application.uuid !== applicationUuid) throw new Error("Application could not be verified.");
+    if (application.uuid !== applicationUuid)
+      throw new PublicError("Application could not be verified.");
     return {
       uuid: applicationUuid,
       name: application.name,

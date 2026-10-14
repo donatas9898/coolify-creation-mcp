@@ -3,6 +3,7 @@ import { applicationTypes, projectSchema, webhookSchema } from "./schemas.js";
 import type { CoolifyClient } from "./coolify.js";
 import type { ApplicationType } from "./schemas.js";
 import type { z } from "zod";
+import { toolErrorMessage } from "./errors.js";
 
 export function createServer(client: CoolifyClient) {
   const server = new McpServer({ name: "coolify-creation-mcp", version: "0.1.0" });
@@ -31,12 +32,7 @@ export function createServer(client: CoolifyClient) {
           const result = await handler(inputSchema.parse(input));
           return { content: [{ type: "text", text: JSON.stringify(result) }] };
         } catch (error) {
-          // Unexpected exceptions may contain credentials or upstream response bodies.
-          const message =
-            error instanceof Error && !error.message.includes(client.token)
-              ? error.message
-              : "Operation failed. Check server configuration.";
-          return { isError: true, content: [{ type: "text", text: message }] };
+          return { isError: true, content: [{ type: "text", text: toolErrorMessage(error) }] };
         }
       },
     );

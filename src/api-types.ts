@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { uuid } from "./schemas.js";
+import { PublicError } from "./errors.js";
 
 export const environmentResponseSchema = z.object({
   id: z.number().optional(),
@@ -48,6 +49,6 @@ export function parseResponse<Schema extends z.ZodType>(
   label: string,
 ): z.output<Schema> {
   const result = schema.safeParse(data);
-  if (!result.success) throw new Error(`Coolify returned invalid ${label} metadata.`);
+  if (!result.success) throw new PublicError(`Coolify returned invalid ${label} metadata.`);
   return result.data;
 }
