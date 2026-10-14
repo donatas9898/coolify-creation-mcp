@@ -1,0 +1,18 @@
+{
+  "name": "coolify-creation-mcp",
+  "version": "0.1.0",
+  "description": "MCP tools for creating Coolify applications from container images, Git repositories, Dockerfiles, and Docker Compose.",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node src/index.mjs",
+    "test": "node --test",
+    "check": "node --check src/index.mjs && node --check src/coolify.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.3.1",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": { "@modelcontextprotocol/client": "2.3.1" }
+}

@@ -1,0 +1,14 @@
+{
+  "project_uuid": "your-project-uuid",
+  "server_uuid": "your-server-uuid",
+  "environment_uuid": "your-environment-uuid",
+  "destination_uuid": "your-destination-uuid",
+  "name": "example-app",
+  "docker_registry_image_name": "nginx",
+  "docker_registry_image_tag": "alpine",
+  "ports_exposes": "80",
+  "domains": [],
+  "autogenerate_domain": true,
+  "health_check_enabled": false,
+  "redirect": "both"
+}

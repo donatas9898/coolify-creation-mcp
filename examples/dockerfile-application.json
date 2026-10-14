@@ -1,0 +1,9 @@
+{
+  "project_uuid": "your-project-uuid",
+  "server_uuid": "your-server-uuid",
+  "environment_uuid": "your-environment-uuid",
+  "name": "example-app",
+  "dockerfile": "FROM nginx:alpine\nEXPOSE 80\n",
+  "ports_exposes": "80",
+  "domains": []
+}

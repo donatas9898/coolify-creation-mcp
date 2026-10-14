@@ -1,0 +1,12 @@
+{
+  "project_uuid": "your-project-uuid",
+  "server_uuid": "your-server-uuid",
+  "environment_uuid": "your-environment-uuid",
+  "name": "example-app",
+  "github_app_uuid": "your-github-app-uuid",
+  "git_repository": "https://github.com/example/application.git",
+  "git_branch": "main",
+  "build_pack": "railpack",
+  "ports_exposes": "3000",
+  "domains": []
+}
